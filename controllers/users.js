@@ -72,13 +72,30 @@ const login = async(req,res,next) => {
             token,
             user: {
                 email,
-                subscription: 'starter'
+                subscription: user.subscription,
             }
         })
 
     } catch (error) {
         next(error);
     }
+}
+
+
+const current = (req,res,next) => {
+    const {email, subscription} = req.user;
+    console.log(req.user);
+    res.json({
+            email,
+            subscription,
+    })
+}
+
+
+const logout = async(req,res,next) => {
+    const {_id} = req.user;
+    await User.findByIdAndUpdate(_id, {token: ""})
+    res.status(204).json();
 }
 
 
@@ -90,4 +107,6 @@ const login = async(req,res,next) => {
 module.exports = {
     register,
     login,
+    current,
+    logout,
 }

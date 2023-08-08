@@ -18,7 +18,8 @@ const addSchema = Joi.object({
 
  const getAll =  async (req, res, next) => {
         try {
-        const allContacts = await Contact.find();
+        const {_id: owner} = req.user;
+        const allContacts = await Contact.find({owner}, '-createdAt -updatedAt').populate('owner', 'email');
         res.json(allContacts);
         } catch (error) {
           next(error);
@@ -45,7 +46,8 @@ const addSchema = Joi.object({
       if (error) {
         throw HttpError(400, error.message);
       }
-      const newContact = await Contact.create(req.body);
+      const {_id: owner} = req.user;
+      const newContact = await Contact.create({...req.body, owner});
       res.status(201).json(newContact)
     } catch (error) {
       next(error);
