@@ -19,7 +19,9 @@ const addSchema = Joi.object({
  const getAll =  async (req, res, next) => {
         try {
         const {_id: owner} = req.user;
-        const allContacts = await Contact.find({owner}, '-createdAt -updatedAt').populate('owner', 'email');
+        const {page = 1, limit = 20} = req.query;
+        const skip = (page-1) * limit; 
+        const allContacts = await Contact.find({owner}, '-createdAt -updatedAt', {skip,limit}).populate('owner', 'email');
         res.json(allContacts);
         } catch (error) {
           next(error);
