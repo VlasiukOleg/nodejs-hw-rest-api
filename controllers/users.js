@@ -25,6 +25,10 @@ const loginSchema = Joi.object({
     password: Joi.string().min(3).required(),
 })
 
+const  subscribeSchema = Joi.object({
+    subscription: Joi.string().valid('starter', 'pro', 'business').required(),
+})
+
 
 const register = async(req, res, next) => {
     try {
@@ -99,6 +103,25 @@ const logout = async(req,res,next) => {
 }
 
 
+const updateSubscribe = async(req,res,next) => {
+    try {
+        const {error} = subscribeSchema.validate(req.body);
+        if (error) {
+        throw HttpError(400)
+         }
+         const {_id} = req.user;
+        const result = await User.findByIdAndUpdate(_id, req.body, {new: true})
+        if (!result)  {
+        throw HttpError(404)
+        }
+        res.json(result)
+    } catch (error) {
+        next(error);
+    }
+    
+}
+
+
 
 
 
@@ -109,4 +132,5 @@ module.exports = {
     login,
     current,
     logout,
+    updateSubscribe
 }

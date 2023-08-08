@@ -11,6 +11,7 @@ router.post('/register', ctrl.register);
 router.post('/login', ctrl.login);
 router.get('/current', authenticate, ctrl.current);
 router.get('/logout', authenticate, ctrl.logout);
+router.patch('/', authenticate, ctrl.updateSubscribe);
 
 
 
