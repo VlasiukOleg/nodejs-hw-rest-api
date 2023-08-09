@@ -21,7 +21,14 @@ const addSchema = Joi.object({
         const {_id: owner} = req.user;
         const {page = 1, limit = 20, favorite} = req.query;
         const skip = (page-1) * limit; 
-        const allContacts = await Contact.find({owner, favorite}, '-createdAt -updatedAt', {skip,limit}).populate('owner', 'email');
+        
+        const query = {owner};
+        if (favorite !== undefined) {
+          query.favorite = favorite;
+        }
+        console.log(query);
+
+        const allContacts =  await Contact.find(query, '-createdAt -updatedAt', {skip,limit,}).populate('owner', 'email');
         res.json(allContacts);
         } catch (error) {
           next(error);
