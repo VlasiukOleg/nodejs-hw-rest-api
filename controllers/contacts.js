@@ -21,12 +21,12 @@ const addSchema = Joi.object({
         const {_id: owner} = req.user;
         const {page = 1, limit = 20, favorite} = req.query;
         const skip = (page-1) * limit; 
-        
+
         const query = {owner};
         if (favorite !== undefined) {
           query.favorite = favorite;
         }
-        console.log(query);
+
 
         const allContacts =  await Contact.find(query, '-createdAt -updatedAt', {skip,limit,}).populate('owner', 'email');
         res.json(allContacts);
@@ -38,11 +38,13 @@ const addSchema = Joi.object({
  const getById = async (req, res, next) => {
     try {
       const {contactId} = req.params;
-      const contactByID = await Contact.findById(contactId);
-      if (!contactByID) {
-        throw HttpError(404, 'Not Found');
+      const {_id: owner} = req.user;
+      const contact = await Contact.findOne({_id: contactId, owner: owner});
+      if (!contact) {
+        throw HttpError(403);
       }
-      res.json(contactByID)
+      
+      res.json(contact)
     } catch (error) {
       next(error);
      
@@ -70,11 +72,12 @@ const addSchema = Joi.object({
         throw HttpError(400, error.message);
       }
       const {contactId} = req.params;
-      const result = await Contact.findByIdAndUpdate(contactId, req.body, {new: true});
-      if (!result) {
-        throw HttpError(404, 'Not Found');
+      const {_id: owner} = req.user;
+      const contact = await Contact.findOneAndUpdate({_id:contactId, owner: owner}, req.body, {new: true});
+      if (!contact) {
+        throw HttpError(403);
       }
-      res.json(result)
+      res.json(contact);
     } catch (error) {
       next(error);
     }
@@ -88,11 +91,12 @@ const addSchema = Joi.object({
         throw HttpError(400, 'missing field favorite');
       }
       const {contactId} = req.params;
-      const result = await Contact.findByIdAndUpdate(contactId, req.body, {new: true});
-      if (!result) {
-        throw HttpError(404, 'Not Found');
+      const {_id: owner} = req.user;
+      const contact = await Contact.findOneAndUpdate({_id:contactId, owner: owner}, req.body, {new: true});
+      if (!contact) {
+        throw HttpError(403);
       }
-      res.json(result)
+      res.json(contact)
     } catch (error) {
       next(error);
     }
@@ -101,11 +105,12 @@ const addSchema = Joi.object({
   const remove = async (req, res, next) => {
     try {
       const {contactId} = req.params;
-      const result= await Contact.findByIdAndDelete(contactId);
-      if (!result) {
-        throw HttpError(404, 'Not Found')
+      const {_id: owner} = req.user;
+      const contact = await Contact.findOneAndDelete({_id:contactId, owner: owner});
+      if (!contact) {
+        throw HttpError(404)
       }
-      res.json(result)
+      res.json(contact)
     } catch (error) {
       next(error);
     }
