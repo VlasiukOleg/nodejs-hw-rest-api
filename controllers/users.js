@@ -1,6 +1,7 @@
 const Joi = require('joi');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const gravatar = require('gravatar');
 
 const User = require('../models/users');
 
@@ -42,8 +43,10 @@ const register = async(req, res, next) => {
             throw HttpError(409, "Email in use");
         }   
         const hashPassword = await bcrypt.hash(password,10);
+        const avatarUrl = gravatar.url(email);
+
         
-        const newUser = await User.create({...req.body, password: hashPassword});
+        const newUser = await User.create({...req.body, password: hashPassword, avatarUrl});
 
         res.status(201).json({user: {email: newUser.email, subscription: 'starter'}});
         
@@ -121,6 +124,14 @@ const updateSubscribe = async(req,res,next) => {
     
 }
 
+const updateAvatar = async (req,res,next) => {
+    try {
+        
+    } catch (error) {
+        next(error);
+    }
+}
+
 
 
 
@@ -132,5 +143,6 @@ module.exports = {
     login,
     current,
     logout,
-    updateSubscribe
+    updateSubscribe,
+    updateAvatar,
 }
