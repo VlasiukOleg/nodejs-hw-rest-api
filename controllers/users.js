@@ -51,7 +51,7 @@ const register = async(req, res, next) => {
         
         const newUser = await User.create({...req.body, password: hashPassword, avatarUrl});
 
-        res.status(201).json({user: {email: newUser.email, subscription: 'starter'}});
+        res.status(201).json({user: {id: newUser._id, email: newUser.email, subscription: 'starter'}});
         
     } catch (error) {
         next(error);
@@ -154,6 +154,20 @@ const updateAvatar = async (req,res,next) => {
 }
 
 
+const remove = async (req, res, next) => {
+    try {
+      const {userId} = req.params
+      const contact = await User.findOneAndDelete({_id:userId});
+      if (!contact) {
+        throw HttpError(404)
+      }
+      res.json(contact)
+    } catch (error) {
+      next(error);
+    }
+  }
+
+
 
 
 
@@ -166,4 +180,5 @@ module.exports = {
     logout,
     updateSubscribe,
     updateAvatar,
+    remove,
 }

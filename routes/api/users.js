@@ -13,6 +13,7 @@ router.get('/current', authenticate, ctrl.current);
 router.get('/logout', authenticate, ctrl.logout);
 router.patch('/', authenticate, ctrl.updateSubscribe);
 router.patch('/avatars', authenticate, upload.single('avatar'), ctrl.updateAvatar);
+router.delete('/:userId', authenticate, ctrl.remove);
 
 
 
