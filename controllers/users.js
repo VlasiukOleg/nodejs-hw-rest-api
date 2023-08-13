@@ -1,6 +1,10 @@
 const Joi = require('joi');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const gravatar = require('gravatar');
+const path = require('path');
+const fs = require('fs/promises');
+const Jimp = require('jimp');
 
 const User = require('../models/users');
 
@@ -42,10 +46,12 @@ const register = async(req, res, next) => {
             throw HttpError(409, "Email in use");
         }   
         const hashPassword = await bcrypt.hash(password,10);
-        
-        const newUser = await User.create({...req.body, password: hashPassword});
+        const avatarUrl = gravatar.url(email);
 
-        res.status(201).json({user: {email: newUser.email, subscription: 'starter'}});
+        
+        const newUser = await User.create({...req.body, password: hashPassword, avatarUrl});
+
+        res.status(201).json({user: {id: newUser._id, email: newUser.email, subscription: 'starter'}});
         
     } catch (error) {
         next(error);
@@ -121,6 +127,46 @@ const updateSubscribe = async(req,res,next) => {
     
 }
 
+const avatarsDir = path.join(__dirname, '../', 'public', 'avatars');
+
+const updateAvatar = async (req,res,next) => {
+    try {
+        const {_id} = req.user;
+        const {path: tempUpload, originalname} = req.file;
+        const fileName = `${_id}_${originalname}`;
+        const resultUpload = path.join(avatarsDir, fileName);
+        await fs.rename(tempUpload, resultUpload);
+        
+        // ! Читаємо картинку. Міняємо розмір 250, висота авто. Перезаписуємо
+        const avatarImage = await Jimp.read(resultUpload);
+        await avatarImage.resize(250, Jimp.AUTO);
+        await avatarImage.writeAsync(resultUpload);
+
+        const avatarUrl = path.join('avatars', fileName);
+        await User.findByIdAndUpdate(_id, {avatarUrl});
+        res.json({
+            avatarUrl,
+        })
+
+    } catch (error) {
+        next(error);
+    }
+}
+
+
+const remove = async (req, res, next) => {
+    try {
+      const {userId} = req.params
+      const contact = await User.findOneAndDelete({_id:userId});
+      if (!contact) {
+        throw HttpError(404)
+      }
+      res.json(contact)
+    } catch (error) {
+      next(error);
+    }
+  }
+
 
 
 
@@ -132,5 +178,7 @@ module.exports = {
     login,
     current,
     logout,
-    updateSubscribe
+    updateSubscribe,
+    updateAvatar,
+    remove,
 }
