@@ -3,17 +3,18 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const gravatar = require('gravatar');
 const path = require('path');
+const {nanoid} = require('nanoid');
 const fs = require('fs/promises');
 const Jimp = require('jimp');
 
 const User = require('../models/users');
 
-const {HttpError} = require('../helpers')
+const {HttpError, sendEmail} = require('../helpers')
 
 const dotenv = require('dotenv');
 dotenv.config();
 
-const {SECRET_KEY} = process.env;
+const {SECRET_KEY, BASE_URL} = process.env;
 
 const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
 
@@ -28,6 +29,7 @@ const loginSchema = Joi.object({
     email: Joi.string().pattern(emailRegex).required(),
     password: Joi.string().min(3).required(),
 })
+
 
 const  subscribeSchema = Joi.object({
     subscription: Joi.string().valid('starter', 'pro', 'business').required(),
@@ -47,9 +49,16 @@ const register = async(req, res, next) => {
         }   
         const hashPassword = await bcrypt.hash(password,10);
         const avatarUrl = gravatar.url(email);
-
+        const verificationToken = nanoid();
         
-        const newUser = await User.create({...req.body, password: hashPassword, avatarUrl});
+        const newUser = await User.create({...req.body, password: hashPassword, avatarUrl, verificationToken });
+
+        const verifyEmail = {
+            to: email,
+            html: `<a target="_blank" href="http://${BASE_URL}/api/users/verify/${verificationToken}">Verify your email<a/>`
+        }
+
+        await sendEmail(verifyEmail);
 
         res.status(201).json({user: {id: newUser._id, email: newUser.email, subscription: 'starter'}});
         
